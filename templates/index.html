@@ -12,12 +12,17 @@
         <textarea id="user-input" placeholder="Enter your topic..."></textarea>
         <button onclick="getIdea()">Get Idea</button>
         <div id="response"></div>
+        <div id="detailed-description">
+            <button onclick="submitSelectedIdeas()">Submit Selected Ideas</button>
+            <button onclick="clearSelections()">Clear Selections</button>
+        </div>
     </div>
 
     <script>
         async function getIdea() {
             const userInput = document.getElementById("user-input").value;
             const responseDiv = document.getElementById("response");
+            responseDiv.innerHTML = "Loading...";
 
             const response = await fetch('/get_idea', {
                 method: 'POST',
@@ -26,7 +31,64 @@
             });
 
             const data = await response.json();
-            responseDiv.innerHTML = data.idea || "Error: " + data.error;
+            responseDiv.innerHTML = "";
+
+            if (Array.isArray(data.ideas)) {
+                data.ideas.forEach(idea => {
+                    const ideaItem = document.createElement("div");
+                    ideaItem.textContent = idea;
+                    ideaItem.className = "idea-item";
+                    ideaItem.onclick = () => toggleIdeaSelection(ideaItem);
+                    responseDiv.appendChild(ideaItem);
+                });
+            } else {
+                responseDiv.innerHTML = "Error: " + (data.error || "No ideas found.");
+            }
+        }
+
+        function toggleIdeaSelection(element) {
+            element.classList.toggle("selected");
+        }
+
+        async function submitSelectedIdeas() {
+            const selectedItems = document.querySelectorAll(".idea-item.selected");
+            if (selectedItems.length < 2) {
+                alert("Please select at least two ideas.");
+                return;
+            }
+
+            const selectedIdeas = Array.from(selectedItems).map(item => item.textContent);
+            console.log("Selected Ideas:", selectedIdeas);
+            alert("Selected Ideas: " + selectedIdeas.join(", "));
+
+            const descriptionDiv = document.getElementById("detailed-description");
+            descriptionDiv.innerHTML = "Fetching detailed descriptions...";
+
+            const response = await fetch('/get_detailed_description', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ideas: selectedIdeas })
+            });
+
+            const data = await response.json();
+            descriptionDiv.innerHTML = "";
+
+            if (Array.isArray(data.descriptions)) {
+                data.descriptions.forEach(desc => {
+                    const descItem = document.createElement("div");
+                    descItem.textContent = desc;
+                    descItem.className = "description";
+                    descriptionDiv.appendChild(descItem);
+                });
+            } else {
+                descriptionDiv.innerHTML = "Error: " + (data.error || "No descriptions found.");
+            }
+        }
+
+        function clearSelections() {
+            const items = document.querySelectorAll(".idea-item.selected");
+            items.forEach(item => item.classList.remove("selected"));
+            document.getElementById("detailed-description").innerHTML = "";
         }
     </script>
 </body>

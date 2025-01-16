@@ -30,3 +30,18 @@ button {
     margin-top: 20px;
     font-weight: bold;
 }
+
+.idea-item {
+    padding: 10px;
+    margin: 5px 0;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.idea-item:hover {
+    background-color: #f0f0f0;
+}
+.selected {
+    background-color: #d1e7dd;
+    border-color: #0f5132;
+}
